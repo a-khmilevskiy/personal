@@ -1,3 +1,5 @@
+
+
 #include <AFMotor.h>
 #include <NewPing.h>
 #include <Servo.h>
@@ -9,10 +11,10 @@
 int command = 0;
 int ECHO_PIN = 11; 
 int TRIG_PIN = 10;
-int cm;
+
 
 Servo myServo;
-AF_DCMotor motor1(1, MOTOR12_64KHZ); //RIGHT PARE
+AF_DCMotor motor1(3, MOTOR12_64KHZ); //RIGHT PARE
 AF_DCMotor motor2(2, MOTOR12_64KHZ); //LEFT PARE
 
  
@@ -21,7 +23,7 @@ void setup() {
   myServo.attach(9);
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
-  motor1.setSpeed(255); //set default speed
+  motor1.setSpeed(245); //set default speed
   motor2.setSpeed(235); //set default speed
 } 
  
@@ -42,19 +44,16 @@ void loop()
 int DistanceTOPath() 
 {
   //Этот метод высчитывает расстояние до препятствий
-  int duration; 
+  unsigned long cm, duration; 
   digitalWrite(TRIG_PIN, LOW); 
   delayMicroseconds(2); 
   digitalWrite(TRIG_PIN, HIGH); 
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
   duration = pulseIn(ECHO_PIN, HIGH); 
   cm = duration / 58;
-  delay(300);
-
-  if (cm>=0){
-  Serial.println(cm);
-  Serial.print("cm");
-  return cm; 
-
+  if (cm>0){
+  return cm;
   }
 }
 
@@ -68,21 +67,24 @@ char ServoControl()
   myServo.write(45);
     //Проверяем что возвращаемое значение не отрицательное и записываем в переменную 
     first = DistanceTOPath();
+    Serial.print("Right side ");
+    Serial.println(first);
   delay(500);
   //Поворачиваем датчик на 135 градусов
   myServo.write(135);
     //Проаверяем что возвращенное значение не отрицательное и записываем в переменную
     second=DistanceTOPath();
-  
+    Serial.print("Left side ");
+    Serial.println(second);    
   //Сравниванием записанные переменные
   if (first>second)
   {
-    return 'L';
+    return 'R';
     //Если число с угла в 45 градусов больше чем полученное со 135 - возвращаем команду L
   }
   if (first<second)
   {
-    return 'R';
+    return 'L';
     //Если число с угла в 45 градусов меньше чем полученное со 135 - возвращаем команду R
   }
   else return 'S';
@@ -90,7 +92,6 @@ char ServoControl()
     
     return 'S';
   }
-  
 }
 
 void WallReactor()
@@ -103,14 +104,14 @@ void WallReactor()
     //Если получаем команду L - поворачиваем налево 200 милисекунд
     TurnLeft();
     //Возвращаем датчик в нейтральное положение
-    ServoControlNeutral();
+    //ServoControlNeutral();
   }
   if (ServoControl() =='R')
   {
     //Если получаем R - поворачиваем направо 200 милисекунд
     TurnRight();
     //Возвращаем датчик в нейтральное положение
-    ServoControlNeutral();
+    //ServoControlNeutral();
   }
   if (ServoControl() == 'S')
   {
@@ -123,10 +124,7 @@ void AutoMove()
 {
   //Ставим сервомотор в нейтральное положение
   ServoControlNeutral();
-    if (DistanceTOPath()>=30)
-    {
-      Forward();
-    }
+  Forward();
   //Если доезжаем до препятствия - тормозим
     if (DistanceTOPath()<30)
     { 
@@ -143,8 +141,9 @@ void Stop()
 //Вперде!
 void Forward()
 {
-  motor1.run(FORWARD);
   motor2.run(FORWARD);
+  motor1.run(FORWARD);
+  
 }
 
 //поворот налево
@@ -206,4 +205,5 @@ void BluetoothControl(){
       //you can add more extra feautres by writing a case command (example: different lights, sound, etc...)
     }
   }
+
 
