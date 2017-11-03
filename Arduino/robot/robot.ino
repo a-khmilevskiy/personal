@@ -4,10 +4,6 @@
 #include <NewPing.h>
 #include <Servo.h>
 
-#define FirstButton 7;
-#define SecondButton 8;
-#define ThirdButton 9;
-
 int command = 0;
 int ECHO_PIN = 11; 
 int TRIG_PIN = 10;
@@ -23,8 +19,8 @@ void setup() {
   myServo.attach(9);
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
-  motor1.setSpeed(245); //set default speed
-  motor2.setSpeed(235); //set default speed
+  motor1.setSpeed(255); //set default speed
+  motor2.setSpeed(255); //set default speed
 } 
  
 void loop() 
@@ -52,6 +48,7 @@ int DistanceTOPath()
   digitalWrite(TRIG_PIN, LOW);
   duration = pulseIn(ECHO_PIN, HIGH); 
   cm = duration / 58;
+  delay(200);
   if (cm>0){
   return cm;
   }
@@ -60,18 +57,19 @@ int DistanceTOPath()
 //Метод крутит головой
 char ServoControl()
 {
-  int first;
-  int second;
-  delay(500);
+  int first = 0;
+  int second = 0;
   //Поворачиваем датчик на 45 градусов
   myServo.write(45);
+    delay(500);
     //Проверяем что возвращаемое значение не отрицательное и записываем в переменную 
     first = DistanceTOPath();
     Serial.print("Right side ");
     Serial.println(first);
-  delay(500);
+    
   //Поворачиваем датчик на 135 градусов
   myServo.write(135);
+     delay(500);
     //Проаверяем что возвращенное значение не отрицательное и записываем в переменную
     second=DistanceTOPath();
     Serial.print("Left side ");
@@ -88,10 +86,12 @@ char ServoControl()
     //Если число с угла в 45 градусов меньше чем полученное со 135 - возвращаем команду R
   }
   else return 'S';
-  while ((first==second)||(first&second<30)){
+  if (first&second<30){
     
     return 'S';
   }
+  first = 0;
+  second = 0;
 }
 
 void WallReactor()
@@ -104,14 +104,14 @@ void WallReactor()
     //Если получаем команду L - поворачиваем налево 200 милисекунд
     TurnLeft();
     //Возвращаем датчик в нейтральное положение
-    //ServoControlNeutral();
+    ServoControlNeutral();
   }
   if (ServoControl() =='R')
   {
     //Если получаем R - поворачиваем направо 200 милисекунд
     TurnRight();
     //Возвращаем датчик в нейтральное положение
-    //ServoControlNeutral();
+    ServoControlNeutral();
   }
   if (ServoControl() == 'S')
   {
@@ -150,14 +150,21 @@ void Forward()
 void TurnLeft()
 {
   motor2.run(BACKWARD);
-  //motor1.run(FORWARD);
+  motor1.run(FORWARD);
+  delay(300);
+  motor2.run(RELEASE);
+  motor1.run(RELEASE);
+  
 }
 
 //поворот направо
 void TurnRight()
 {
   motor1.run(BACKWARD);
-  //motor2.run(FORWARD);
+  motor2.run(FORWARD);
+  delay(300);
+  motor2.run(RELEASE);
+  motor1.run(RELEASE);
 }
 
 //едем назад
