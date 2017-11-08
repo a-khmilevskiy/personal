@@ -1,5 +1,3 @@
-
-
 #include <AFMotor.h>
 #include <NewPing.h>
 #include <Servo.h>
@@ -43,18 +41,18 @@ void loop()
 
 int DistanceTOPath() 
 {
-  int value[3];
-  int delta = 0;
   //Этот метод высчитывает расстояние до препятствий
   unsigned long cm, micros_old_Ult; 
   digitalWrite(TRIG_PIN, HIGH); 
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
+  //этот кусок взял из интернета, предположительно он делает правильные задержки сигнала
   micros_old_Ult = micros();
   while(!digitalRead(ECHO_PIN) && micros()-micros_old_Ult < 500){
     micros_old_Ult = micros();
   }
     while(digitalRead(ECHO_PIN) && micros()-micros_old_Ult < 20000){
+  //формула расета расстояния
     cm = (micros() - micros_old_Ult)/29.0/2;
     }
     delay(300);
@@ -102,8 +100,6 @@ char ServoControl()
     
     return 'S';
   }
-  first = 0;
-  second = 0;
 }
 
 void WallReactor()
