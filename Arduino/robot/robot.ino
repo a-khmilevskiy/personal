@@ -39,20 +39,28 @@ void loop()
 
 int DistanceTOPath() 
 {
+  int value[3];
+  int delta = 0;
   //Этот метод высчитывает расстояние до препятствий
-  unsigned long cm, duration; 
-  digitalWrite(TRIG_PIN, LOW); 
-  delayMicroseconds(2); 
+  unsigned long cm, micros_old_Ult; 
   digitalWrite(TRIG_PIN, HIGH); 
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
-  duration = pulseIn(ECHO_PIN, HIGH); 
-  cm = duration / 58;
-  delay(200);
-  if (cm>0){
-  return cm;
+  micros_old_Ult = micros();
+  while(!digitalRead(ECHO_PIN) && micros()-micros_old_Ult < 500){
+    micros_old_Ult = micros();
   }
+    while(digitalRead(ECHO_PIN) && micros()-micros_old_Ult < 20000){
+    cm = (micros() - micros_old_Ult)/29.0/2;
+    }
+    delay(300);
+    Serial.print("Distance = ");
+    Serial.println(cm);
+    if (0<cm){
+    return(cm);
+    }
 }
+
 
 //Метод крутит головой
 char ServoControl()
@@ -86,7 +94,7 @@ char ServoControl()
     //Если число с угла в 45 градусов меньше чем полученное со 135 - возвращаем команду R
   }
   else return 'S';
-  if (first&second<30){
+  if (first and second<40){
     
     return 'S';
   }
@@ -99,24 +107,26 @@ void WallReactor()
 {
   Stop();
   //Проверяем, что выдает наш датчик
-  if (ServoControl() == 'L')
+  char value = ServoControl();
+  if (value == 'L')
   {
     //Если получаем команду L - поворачиваем налево 200 милисекунд
     TurnLeft();
     //Возвращаем датчик в нейтральное положение
     ServoControlNeutral();
   }
-  if (ServoControl() =='R')
+  if (value =='R')
   {
     //Если получаем R - поворачиваем направо 200 милисекунд
     TurnRight();
     //Возвращаем датчик в нейтральное положение
     ServoControlNeutral();
   }
-  if (ServoControl() == 'S')
+  if (value == 'S')
   {
   Backward();
   }
+
 }
 
 //Фперде!
@@ -126,7 +136,7 @@ void AutoMove()
   ServoControlNeutral();
   Forward();
   //Если доезжаем до препятствия - тормозим
-    if (DistanceTOPath()<30)
+    if (DistanceTOPath()<40)
     { 
     WallReactor();
     }
@@ -151,7 +161,7 @@ void TurnLeft()
 {
   motor2.run(BACKWARD);
   motor1.run(FORWARD);
-  delay(300);
+  delay(600);
   motor2.run(RELEASE);
   motor1.run(RELEASE);
   
@@ -162,7 +172,7 @@ void TurnRight()
 {
   motor1.run(BACKWARD);
   motor2.run(FORWARD);
-  delay(300);
+  delay(600);
   motor2.run(RELEASE);
   motor1.run(RELEASE);
 }
@@ -171,7 +181,10 @@ void TurnRight()
 void Backward()
 {
   motor1.run(BACKWARD);
-  motor2.run(BACKWARD); 
+  motor2.run(BACKWARD);
+  delay(600);
+  motor1.run(RELEASE);
+  motor2.run(RELEASE); 
 }
 
 void ServoControlNeutral()
