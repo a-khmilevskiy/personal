@@ -3,11 +3,15 @@
 #include <AFMotor.h>
 #include <NewPing.h>
 #include <Servo.h>
+#include <SoftwareSerial.h>
 
+int grxPin = 0;
+int gtxPin = 1;
 int command = 0;
 int ECHO_PIN = 11; 
 int TRIG_PIN = 10;
 
+SoftwareSerial BTSerial(grxPin, gtxPin);
 
 Servo myServo;
 AF_DCMotor motor1(3, MOTOR12_64KHZ); //RIGHT PARE
@@ -15,6 +19,7 @@ AF_DCMotor motor2(2, MOTOR12_64KHZ); //LEFT PARE
 
  
 void setup() { 
+  BTSerial.begin(38400);
   Serial.begin (9600); 
   myServo.attach(9);
   pinMode(TRIG_PIN, OUTPUT);
@@ -25,11 +30,10 @@ void setup() {
  
 void loop() 
 {
-  if (Serial.available() > 0) { //if the Arduino detects incoming data
-    // read the incoming byte:
-    command = Serial.read();
-    //Serial.print(command);
-    UserCommandsInit();
+  if (BTSerial.available() > 0) { //if the Arduino detects incoming data
+    Stop();
+    BluetoothControl();
+
   }
   else
   {
@@ -203,6 +207,7 @@ void UserCommandsInit()
 }
 
 void BluetoothControl(){
+  command = BTSerial.read();
   Serial.print(command);
   switch (command) //set different cases of the "command" variable
   {
