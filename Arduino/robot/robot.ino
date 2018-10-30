@@ -7,18 +7,19 @@
 #define LED_PIN 13
 #define TEMP_PIN A1
 
-int nullator = 0;
 int grxPin = 0;
 int gtxPin = 1;
 int command = 0;
 int ECHO_PIN = 2; 
-int TRIG_PIN = 3;
+int TRIG_PIN = 13;
 
 SoftwareSerial BTSerial(grxPin, gtxPin);
 
 Servo myServo;
-AF_DCMotor motor1(3, MOTOR12_64KHZ); //RIGHT PARE
-AF_DCMotor motor2(4, MOTOR12_64KHZ); //LEFT PARE
+AF_DCMotor motor1(1, MOTOR12_64KHZ); //RIGHT PARE
+AF_DCMotor motor2(2, MOTOR12_64KHZ); //LEFT PARE
+AF_DCMotor motor3(3, MOTOR12_64KHZ); //UPPER ONE
+AF_DCMotor motor4(4, MOTOR12_64KHZ); //UPPER ONE
 
  
 void setup() { 
@@ -30,12 +31,14 @@ void setup() {
   pinMode(ECHO_PIN, INPUT);
   motor1.setSpeed(255); //set default speed
   motor2.setSpeed(255); //set default speed
+  motor3.setSpeed(255);
+  motor4.setSpeed(255);
 } 
  
 void loop() {
 Listener();
-Lightning();
-Temperature();
+//Lightning();
+
 }
 
 bool CommandChecker(){
@@ -44,58 +47,72 @@ bool CommandChecker(){
    value = true;
   }
   else{
-    value=false;
+    value=false; 
   }
   return value;
-  Serial.println(value);
 }
 
 void Listener(){
   bool value = CommandChecker();
   if (value == true){
   BluetoothControl();
-  nullator = 0;
   }
-  else{
-    for(int i =0;i<=5000;i++){
-      nullator++;
-    }
-    if (nullator>=4500){
-      AutoMove();
-    }
-    
-  }
+
 }
 
 void BluetoothControl(){
  int s = Serial.read();
- //Serial.println(s);
   delay(100);
+  Serial.println(s);
   switch (s) //set different cases of the "command" variable
   {
-     default:{
+    default:{
       motor1.run(RELEASE);
       motor2.run(RELEASE);
-        }break;
+      motor3.run(RELEASE);
+      motor4.run(RELEASE);
+      Serial.println("Stopped");
+    }break;
       case 'F': { //go forward
         motor2.run(FORWARD);
         motor1.run(FORWARD);
+        motor3.run(FORWARD);
+        motor4.run(FORWARD);
+        Serial.println("Running");
       } break;   
       case 'B': { //go backward
         motor2.run(BACKWARD);
-        motor1.run(BACKWARD); 
+        motor1.run(BACKWARD);
+        motor3.run(BACKWARD);
+        motor4.run(BACKWARD); 
+        Serial.println("Going Back");
       } break;   
       case 'R': { //spin right
-        motor1.run(BACKWARD);
+        motor1.run(FORWARD);
         motor2.run(FORWARD);
+        motor3.run(BACKWARD);
+        motor4.run(BACKWARD);
+        Serial.println("Turning Right");
       } break;   
       case 'L': { //spin left
-        motor1.run(FORWARD);
+        motor1.run(BACKWARD);
         motor2.run(BACKWARD);
+        motor3.run(FORWARD);
+        motor4.run(FORWARD);
+        Serial.println("Turning Left");
       } break;
+      /*case 't':{
+        Temperature();
+      }break;*/
+      case 'a':{
+        AutoMove();
+      }break;
+      
+      
      
       //you can add more extra feautres by writing a case command (example: different lights, sound, etc...)
   }
+  
 }
 
 int DistanceTOPath() 
@@ -199,6 +216,10 @@ void AutoMove()
     { 
     WallReactor();
     }
+    if (CommandChecker()==false){
+      AutoMove();
+    }
+    
  }
  
 //СТОЯТЬ!!!
@@ -206,12 +227,16 @@ void Stop()
 {
   motor1.run(RELEASE);
   motor2.run(RELEASE);
+  motor3.run(RELEASE);
+  motor4.run(RELEASE);
 }
 //Вперде!
 void Forward()
 {
   motor2.run(FORWARD);
   motor1.run(FORWARD);
+  motor3.run(FORWARD);
+  motor4.run(FORWARD);
   
 }
 
@@ -219,21 +244,29 @@ void Forward()
 void TurnLeft()
 {
   motor2.run(BACKWARD);
-  motor1.run(FORWARD);
+  motor1.run(BACKWARD);
+  motor3.run(FORWARD);
+  motor4.run(FORWARD);
   delay(600);
   motor2.run(RELEASE);
   motor1.run(RELEASE);
+  motor3.run(RELEASE);
+  motor4.run(RELEASE);
   
 }
 
 //поворот направо
 void TurnRight()
 {
-  motor1.run(BACKWARD);
+  motor1.run(FORWARD);
   motor2.run(FORWARD);
+  motor3.run(BACKWARD);
+  motor4.run(BACKWARD);
   delay(600);
   motor2.run(RELEASE);
   motor1.run(RELEASE);
+  motor3.run(RELEASE);
+  motor4.run(RELEASE);
 }
 
 //едем назад
@@ -241,9 +274,13 @@ void Backward()
 {
   motor1.run(BACKWARD);
   motor2.run(BACKWARD);
+  motor3.run(BACKWARD);
+  motor4.run(BACKWARD);
   delay(600);
   motor1.run(RELEASE);
   motor2.run(RELEASE); 
+  motor3.run(RELEASE);
+  motor4.run(RELEASE);
 }
 
 void ServoControlNeutral()
